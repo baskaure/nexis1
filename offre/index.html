@@ -214,7 +214,7 @@ fbq('init','1234567890123456');fbq('track','PageView');
   .modal-close{position:absolute;top:16px;right:16px;width:36px;height:36px;border-radius:50%;
     border:1px solid var(--line);background:transparent;color:var(--fg);font-size:16px;cursor:pointer;transition:.2s}
   .modal-close:hover{background:rgba(255,255,255,.06);border-color:var(--line-blue)}
-  #calendly-embed{width:100%;height:640px;border-radius:14px;overflow:hidden}
+  #cal-embed{width:100%;min-height:640px;border-radius:14px;overflow:hidden}
 
   /* ---------- REVEAL ---------- */
   .rv{opacity:0;transform:translateY(22px);transition:opacity .7s ease,transform .7s cubic-bezier(.2,.7,.3,1)}
@@ -386,13 +386,13 @@ fbq('init','1234567890123456');fbq('track','PageView');
   </div>
 </footer>
 
-<!-- CALENDLY MODAL -->
+<!-- MODAL RESERVATION -->
 <div class="modal" id="modal">
   <div class="modal-card">
     <button class="modal-close" id="modalClose" aria-label="Fermer">✕</button>
     <h3>Faisons le point sur vos installations.</h3>
     <p>Choisissez un créneau de 15 minutes. On analyse ensemble votre téléphonie, votre réseau et la sécurité de vos données.</p>
-    <div id="calendly-embed"></div>
+    <div id="cal-embed"></div>
   </div>
 </div>
 
@@ -439,20 +439,18 @@ fbq('init','1234567890123456');fbq('track','PageView');
     cycle();
   })();
 
-  // Modal + Calendly
+  // Modal + Cal.com
   var modal=document.getElementById('modal');
-  var embed=document.getElementById('calendly-embed');
+  var calLoaded=false;
   function openModal(){
     modal.classList.add('open');
     if(window.fbq)fbq('track','Lead');
-    if(!embed.innerHTML){
-      var s=document.createElement('script');
-      s.src='https://assets.calendly.com/assets/external/widget.js';
-      document.head.appendChild(s);
-      var tries=0,iv=setInterval(function(){
-        if(window.Calendly){clearInterval(iv);window.Calendly.initInlineWidget({url:'https://calendly.com/nexis-connect/15min',parentElement:embed});}
-        if(++tries>40)clearInterval(iv);
-      },150);
+    if(!calLoaded){
+      calLoaded=true;
+      (function(C,A,L){var p=function(a,ar){a.q.push(ar)};var d=C.document;C.Cal=C.Cal||function(){var cal=C.Cal;var ar=arguments;if(!cal.loaded){cal.ns={};cal.q=cal.q||[];d.head.appendChild(d.createElement("script")).src=A;cal.loaded=true}if(ar[0]===L){var api=function(){p(api,arguments)};var namespace=ar[1];api.q=api.q||[];if(typeof namespace==="string"){cal.ns[namespace]=cal.ns[namespace]||api;p(cal.ns[namespace],ar);p(cal,["initNamespace",namespace])}else p(cal,ar);return}p(cal,ar)}})(window,"https://app.cal.com/embed/embed.js","init");
+      Cal("init","nexis",{origin:"https://app.cal.com"});
+      Cal.ns.nexis("inline",{elementOrSelector:"#cal-embed",config:{layout:"month_view"},calLink:"communication-nexis-it-iuokqq/30min"});
+      Cal.ns.nexis("ui",{hideEventTypeDetails:false,layout:"month_view"});
     }
   }
   function closeModal(){modal.classList.remove('open')}
