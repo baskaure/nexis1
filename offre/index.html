@@ -19,9 +19,9 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <!-- Meta Pixel Code -->
 <script>
 !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
-fbq('init','1234567890123456');fbq('track','PageView');
+fbq('init','1998346077548790');fbq('track','PageView');
 </script>
-<noscript><img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=1234567890123456&ev=PageView&noscript=1"/></noscript>
+<noscript><img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=1998346077548790&ev=PageView&noscript=1"/></noscript>
 
 <style>
   :root{
@@ -221,7 +221,22 @@ fbq('init','1234567890123456');fbq('track','PageView');
   .modal-close{position:absolute;top:16px;right:16px;width:36px;height:36px;border-radius:50%;
     border:1px solid var(--line);background:transparent;color:var(--fg);font-size:16px;cursor:pointer;transition:.2s}
   .modal-close:hover{background:rgba(255,255,255,.06);border-color:var(--line-blue)}
-  #cal-embed{width:100%;min-height:640px;border-radius:14px;overflow:hidden}
+  .lead-form{display:flex;flex-direction:column;gap:16px}
+  .lead-field{display:flex;flex-direction:column;gap:6px}
+  .lead-field label{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#A6B2C4}
+  .lead-field input{background:rgba(30,144,255,.04);border:1px solid rgba(30,144,255,.28);border-radius:10px;padding:14px 16px;color:#F5F7FA;font-family:inherit;font-size:16px;transition:border-color .2s,background .2s}
+  .lead-field input::placeholder{color:#6B7585}
+  .lead-field input:focus{outline:none;border-color:#1E90FF;background:rgba(30,144,255,.08)}
+  .lead-field input.invalid{border-color:#FF6B6B}
+  .lead-hp{position:absolute;left:-9999px;opacity:0}
+  .lead-error{display:none;font-size:13px;color:#FF8A8A;margin:0}
+  .lead-error.show{display:block}
+  .lead-submit{background:linear-gradient(135deg,#1E90FF 0%,#4DA3FF 100%);color:#fff;border:none;padding:16px 28px;border-radius:10px;font-family:inherit;font-size:15px;font-weight:700;cursor:pointer}
+  .lead-submit:disabled{opacity:.6;cursor:default}
+  .lead-note{font-size:12px;color:#6B7585;margin:0;text-align:center}
+  .lead-success{display:none;text-align:center;padding:12px 0}
+  .lead-success.show{display:block}
+  .lead-success .check{width:56px;height:56px;border-radius:50%;margin:0 auto 16px;display:flex;align-items:center;justify-content:center;background:rgba(30,144,255,.14);color:#4DA3FF;font-size:26px}
 
   /* ---------- REVEAL ---------- */
   .rv{opacity:0;transform:translateY(22px);transition:opacity .7s ease,transform .7s cubic-bezier(.2,.7,.3,1)}
@@ -406,9 +421,35 @@ fbq('init','1234567890123456');fbq('track','PageView');
 <div class="modal" id="modal">
   <div class="modal-card">
     <button class="modal-close" id="modalClose" aria-label="Fermer">✕</button>
-    <h3>Faisons le point sur vos installations.</h3>
-    <p>Choisissez un créneau de 15 minutes. On analyse ensemble votre téléphonie, votre réseau et la sécurité de vos données.</p>
-    <div id="cal-embed"></div>
+    <div id="leadIntro">
+      <h3>On vous rappelle.</h3>
+      <p>Laissez vos coordonnées : un conseiller Nexis vous rappelle pour faire le point sur vos installations. 15 minutes, sans engagement.</p>
+    </div>
+    <form class="lead-form" id="leadForm" novalidate>
+      <input type="hidden" name="form-name" value="rappel-nexis">
+      <input type="hidden" name="page" value="">
+      <div class="lead-field">
+        <label for="leadName">Nom et prénom</label>
+        <input type="text" id="leadName" name="nom" autocomplete="name" placeholder="Marie Dupont" required>
+      </div>
+      <div class="lead-field">
+        <label for="leadPhone">Téléphone</label>
+        <input type="tel" id="leadPhone" name="telephone" autocomplete="tel" inputmode="tel" placeholder="06 12 34 56 78" required>
+      </div>
+      <div class="lead-field">
+        <label for="leadCompany">Entreprise</label>
+        <input type="text" id="leadCompany" name="entreprise" autocomplete="organization" placeholder="Nom de votre société" required>
+      </div>
+      <input type="checkbox" name="botcheck" class="lead-hp" tabindex="-1" autocomplete="off">
+      <p class="lead-error" id="leadError"></p>
+      <button type="submit" class="lead-submit" id="leadSubmit">Etre rappelé</button>
+      <p class="lead-note">Vos coordonnées servent uniquement à vous rappeler.</p>
+    </form>
+    <div class="lead-success" id="leadSuccess">
+      <div class="check">✓</div>
+      <h3>C'est noté.</h3>
+      <p>Un conseiller Nexis vous rappelle très vite. Besoin immédiat ? Appelez le 04 48 22 22 48.</p>
+    </div>
   </div>
 </div>
 
@@ -455,21 +496,48 @@ fbq('init','1234567890123456');fbq('track','PageView');
     cycle();
   })();
 
-  // Modal + Cal.com
+  // Modal + formulaire de rappel (formulaires Netlify)
   var modal=document.getElementById('modal');
-  var calLoaded=false;
   function openModal(){
     modal.classList.add('open');
-    if(window.fbq)fbq('track','Lead');
-    if(!calLoaded){
-      calLoaded=true;
-      (function(C,A,L){var p=function(a,ar){a.q.push(ar)};var d=C.document;C.Cal=C.Cal||function(){var cal=C.Cal;var ar=arguments;if(!cal.loaded){cal.ns={};cal.q=cal.q||[];d.head.appendChild(d.createElement("script")).src=A;cal.loaded=true}if(ar[0]===L){var api=function(){p(api,arguments)};var namespace=ar[1];api.q=api.q||[];if(typeof namespace==="string"){cal.ns[namespace]=cal.ns[namespace]||api;p(cal.ns[namespace],ar);p(cal,["initNamespace",namespace])}else p(cal,ar);return}p(cal,ar)}})(window,"https://app.cal.com/embed/embed.js","init");
-      Cal("init","nexis",{origin:"https://app.cal.com"});
-      Cal.ns.nexis("inline",{elementOrSelector:"#cal-embed",config:{layout:"month_view"},calLink:"communication-nexis-it-iuokqq/30min"});
-      Cal.ns.nexis("ui",{hideEventTypeDetails:false,layout:"month_view"});
-    }
+    setTimeout(function(){var n=document.getElementById('leadName');if(n)n.focus()},50);
   }
   function closeModal(){modal.classList.remove('open')}
+  document.getElementById('leadForm').addEventListener('submit',function(e){
+    e.preventDefault();
+    var form=e.target,btn=document.getElementById('leadSubmit'),err=document.getElementById('leadError');
+    var name=form.nom,phone=form.telephone,company=form.entreprise;
+    err.classList.remove('show');
+    [name,phone,company].forEach(function(i){i.classList.remove('invalid')});
+    if(form.botcheck.checked)return;
+    var digits=phone.value.replace(/\D/g,''),bad=[];
+    if(name.value.trim().length<2)bad.push(name);
+    if(digits.length<10||digits.length>13)bad.push(phone);
+    if(company.value.trim().length<2)bad.push(company);
+    if(bad.length){
+      bad.forEach(function(i){i.classList.add('invalid')});
+      err.textContent=(bad.length===1&&bad[0]===phone)?'Ce numéro ne semble pas complet.':'Merci de remplir les trois champs.';
+      err.classList.add('show');bad[0].focus();return;
+    }
+    btn.disabled=true;btn.textContent='Envoi…';
+    fetch('https://hook.eu2.make.com/9azolgzcbj5i7mbbfuzuxx6tmqlwwrl5',{
+      method:'POST',
+      headers:{'Content-Type':'application/x-www-form-urlencoded'},
+      body:new URLSearchParams({'form-name':'rappel-nexis',nom:name.value.trim(),telephone:phone.value.trim(),entreprise:company.value.trim(),page:location.href}).toString()
+    }).then(function(res){
+      if(!res.ok)throw new Error('envoi refuse');
+      // Le prospect n'est compte qu'une fois le formulaire reellement envoye.
+      if(window.fbq)fbq('track','Lead');
+      window.dataLayer=window.dataLayer||[];
+      window.dataLayer.push({event:'generate_lead',form_name:'rappel_nexis'});
+      form.style.display='none';
+      document.getElementById('leadIntro').style.display='none';
+      document.getElementById('leadSuccess').classList.add('show');
+    }).catch(function(){
+      err.textContent="L'envoi n'a pas abouti. Réessayez, ou appelez le 04 48 22 22 48.";
+      err.classList.add('show');btn.disabled=false;btn.textContent='Etre rappelé';
+    });
+  });
   document.querySelectorAll('[data-cta]').forEach(function(b){b.addEventListener('click',openModal)});
   document.getElementById('modalClose').addEventListener('click',closeModal);
   modal.addEventListener('click',function(e){if(e.target===modal)closeModal()});
